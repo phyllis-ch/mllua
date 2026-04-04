@@ -10,12 +10,12 @@ local data_size = #train_data
 -- Cost function shows average how far from expected value
 -- Cost function returns result
 -- Lower result is better
-local function cost(w)
+local function cost(w, b)
    local result = 0.0
 
    for i = 1, data_size do
       local x = train_data[i][1]
-      local y = x * w
+      local y = (x * w) + b
       local d = y - train_data[i][2]
       result = result + d*d
    end
@@ -27,18 +27,21 @@ end
 
 -- Stir the pile until it works
 local w = math.random() * 10                    -- Random float between 1 to 10
+local b = math.random() * 5                     -- bias
 local eps = 1e-3
 local rate = 1e-3                               -- learning rate to make dcost smaller, to wiggle slowly
 
 -- Wiggle w to the better direction using dcost
 -- If cost result becomes lower, then correct direction
-print(cost(w))
-for i = 1, 500 do
-   local dcost = (cost(w + eps) - cost(w)) / eps   -- Derivative function
-   w = w - (rate * dcost)
-   print(cost(w))
+print(cost(w, b))
+for i = 1, 10000 do
+   local dw = (cost(w + eps, b) - cost(w, b)) / eps   -- Derivative function
+   local db = (cost(w, b + eps) - cost(w, b)) / eps   -- Derivative function
+   w = w - (rate * dw)
+   b = b - (rate * db)
+   print("cost: " .. cost(w, b) .. " w: " .. w .. " b: " .. b)
 end
 
 -- If w is basically 2, then good
-print("------------------")
-print(w)
+print("--------------------------")
+print("cost: " .. cost(w, b) .. " w: " .. w .. " b: " .. b)
