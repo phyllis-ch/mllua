@@ -96,6 +96,9 @@ print("cost = " .. cost(Xor) .. "\n")
 -- print("w6 = " .. Grad.w6)
 -- print("b3 = " .. Grad.b3 .. "\n")
 
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!You can change this shit!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 local itr = 150000
 for _ = 1, itr do
    Grad = finite_diff(Xor, eps)
