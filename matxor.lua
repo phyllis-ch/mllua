@@ -1,5 +1,10 @@
 local mat = require("matrix")
 
+local function MAT_PRINT(m, m_name)
+   io.write(m_name .. ": \n")
+   mat.print(m)
+end
+
 local function forward(Xor)
    mat.dot(Xor.a1, Xor.x, Xor.w1)
    mat.sum(Xor.a1, Xor.b1)
@@ -26,17 +31,27 @@ local function cost(Xor, ti, to)
    return result / #ti
 end
 
-local function finite_diff(Xor, keys, Grad, eps, ti, to)
+local function finite_diff(Xor, Grad, eps, ti, to)
    local c = cost(Xor, ti, to)
 
-   for _, k in ipairs(keys) do
-      for i = 1, #Xor[k] do
-         for j = 1, #Xor[k][i] do
-            local temp = Xor[k][i][j]
+   for k, v in pairs(Xor) do
+      for i = 1, #v do
+         for j = 1, #v[1] do
+            local temp = v[i][j]
 
-            Xor[k][i][j] = Xor[k][i][j] + eps
+            v[i][j] = v[i][j] + eps
             Grad[k][i][j] = (cost(Xor, ti, to) - c) / eps
-            Xor[k][i][j] = temp
+            v[i][j] = temp
+         end
+      end
+   end
+end
+
+local function train(Xor, Grad, rate)
+   for k, v in pairs(Xor) do
+      for i = 1, #v do
+         for j = 1, #v[1] do
+            v[i][j] = v[i][j] - (rate * Grad[k][i][j])
          end
       end
    end
@@ -55,7 +70,7 @@ local to = {
    {0.0},
    {1.0},
    {1.0},
-   {1.0},
+   {0.0},
 }
 
 local Xor = {
@@ -82,20 +97,12 @@ local Grad = {
    a2 = mat.init(1, 1),
 }
 
--- Due to behaviour in lua with kv pairs,
--- kv pairs are unordered, which may cause bugs
--- Hence sort keys manually
-local keys = {}
-for k in pairs(Xor) do
-   keys[#keys+1] = k
-end
-table.sort(keys)
 
-local eps = 1e-2
-local rate = 1e-2
+local eps = 1e-1
+local rate = 1e-1
 
 -- Abstract later
-for k, _ in pairs(Xor) do
+for k, v in pairs(Xor) do
    mat.randomf(Xor[k], 0, 1)
 end
 
@@ -104,32 +111,35 @@ end
 --    mat.print(Xor[k])
 -- end
 
-mat.print(Xor.x)
+-- print("Before:")
+-- MAT_PRINT(Xor.x, "x ")
+--
+-- MAT_PRINT(Xor.w1, "w1")
+-- MAT_PRINT(Xor.b1, "b1")
+-- MAT_PRINT(Xor.a1, "a1")
+--
+-- MAT_PRINT(Xor.w2, "w2")
+-- MAT_PRINT(Xor.b2, "b2")
+-- MAT_PRINT(Xor.a2, "a2")
 
-mat.print(Xor.w1)
-mat.print(Xor.b1)
-mat.print(Xor.a1)
+for i = 1, 25000 do
+   print("cost = " .. cost(Xor, ti, to))
+   finite_diff(Xor, Grad, eps, ti, to)
+   train(Xor, Grad, rate)
+end
 
-mat.print(Xor.w2)
-mat.print(Xor.b2)
-mat.print(Xor.a2)
-print(cost(Xor, ti, to))
-finite_diff(Xor, keys, Grad, eps, ti, to)
+-- print("After:")
+-- MAT_PRINT(Xor.x, "x ")
+--
+-- MAT_PRINT(Xor.w1, "w1")
+-- MAT_PRINT(Xor.b1, "b1")
+-- MAT_PRINT(Xor.a1, "a1")
+--
+-- MAT_PRINT(Xor.w2, "w2")
+-- MAT_PRINT(Xor.b2, "b2")
+-- MAT_PRINT(Xor.a2, "a2")
 
-mat.print(Xor.x)
-
-mat.print(Xor.w1)
-mat.print(Xor.b1)
-mat.print(Xor.a1)
-
-mat.print(Xor.w2)
-mat.print(Xor.b2)
-mat.print(Xor.a2)
-
-mat.print(Grad.a1)
-mat.print(Grad.a2)
-mat.print(Grad.x)
-mat.print(Grad.w1)
+print("cost = " .. cost(Xor, ti, to))
 
 -- Print result
 print("---------------------------------")

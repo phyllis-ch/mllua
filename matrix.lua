@@ -1,5 +1,8 @@
 local M = {}
 
+-- TODO: Add an activation function
+-- like sigmoid and relu
+
 function M.init(x, y)
    local m = {}
    for i = 1, x do
@@ -56,6 +59,22 @@ function M.dot(dst, m, n)
          for k = 1, #m[1] do
             dst[i][j] = dst[i][j] + (m[i][k] * n[k][j])
          end
+      end
+   end
+end
+
+function M.sigmoid(m)
+   for i = 1, #m do
+      for j = 1, #m[1] do
+         m[i][j] = math.exp(m[i][j]) / (1 + math.exp(m[i][j]))
+      end
+   end
+end
+
+function M.relu(m)
+   for i = 1, #m do
+      for j = 1, #m[1] do
+         m[i][j] = math.max(0, m[i][j])
       end
    end
 end
