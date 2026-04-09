@@ -5,8 +5,8 @@ local M = {}
 function M.init(layers)
    local nn = {}
 
+   nn["a0"] = mat.init(1, layers[1])
    for i = 1, #layers-1 do
-      nn["x"] = mat.init(1, layers[i])
       nn["w" .. i] = mat.init(layers[i], layers[i+1])
       nn["b" .. i] = mat.init(1, layers[i+1])
       nn["a" .. i] = mat.init(1, layers[i+1])

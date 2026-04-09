@@ -32,6 +32,16 @@ function M.print(m)
    end
 end
 
+function M.PRINT(l, m)
+   for k, v in pairs(l) do
+      if k == m then
+         io.write(k .. ": \n")
+         M.print(v)
+         break
+      end
+   end
+end
+
 function M.randomf(m, low, high)
    for i = 1, #m do
       for j = 1, #m[1] do
