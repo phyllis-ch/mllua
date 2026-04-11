@@ -3,7 +3,7 @@ local M = {}
 -- TODO: Add an activation function
 -- like sigmoid and relu
 
-function M.init(x, y)
+function M.mat_init(x, y)
    local m = {}
    for i = 1, x do
       m[i] = {}
@@ -14,7 +14,7 @@ function M.init(x, y)
    return m
 end
 
-function M.fill(m, a)
+function M.mat_fill(m, a)
    for i = 1, #m do
       for j = 1, #m[1] do
          m[i][j] = a
@@ -22,7 +22,7 @@ function M.fill(m, a)
    end
 end
 
-function M.print(m)
+function M.mat_print(m)
    for i = 1, #m do
       for j = 1, #m[1] do
          io.write("   ")
@@ -32,7 +32,7 @@ function M.print(m)
    end
 end
 
-function M.PRINT(l, m)
+function M.MAT_PRINT(l, m)
    for k, v in pairs(l) do
       if k == m then
          io.write(k .. ": \n")
@@ -42,7 +42,7 @@ function M.PRINT(l, m)
    end
 end
 
-function M.randomf(m, low, high)
+function M.mat_randomf(m, low, high)
    for i = 1, #m do
       for j = 1, #m[1] do
          m[i][j] = math.random() * (high - low) + low
@@ -50,7 +50,7 @@ function M.randomf(m, low, high)
    end
 end
 
-function M.sum(m, n)
+function M.mat_sum(m, n)
    assert(#m == #n, "Rows are not equal")
    assert(#m[1] == #n[1], "Columns are not equal")
    for i = 1, #m do
@@ -60,7 +60,7 @@ function M.sum(m, n)
    end
 end
 
-function M.dot(dst, m, n)
+function M.mat_dot(dst, m, n)
    assert(#m[1] == #n, "Rows and columns are not equal")
 
    for i = 1, #m do
