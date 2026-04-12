@@ -118,6 +118,21 @@ function M.init(layers)
    return nn
 end
 
+function M.header_create(layers)
+   local header = {}
+
+   header["arr_layers"] = layers
+   header["arr_func"] = {}
+
+   for i = 1, #header["arr_layers"]-1 do
+      header["arr_func"][i] = 0
+   end
+
+   header["nn"] = M.init(header["arr_layers"])
+
+   return header
+end
+
 function M.print(nn)
    for k, v in pairs(nn) do
       print(k .. ": ")
