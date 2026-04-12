@@ -121,14 +121,15 @@ function M.nn.init(layers)
 end
 
 -- Subject to change
-function M.header_create(layers)
+function M.header_create(layers, func)
+   func = func or {}
    local header = {}
 
    header["arr_layers"] = layers
    header["arr_func"] = {}
 
    for i = 1, #header["arr_layers"]-1 do
-      header["arr_func"][i] = 0
+      header["arr_func"][i] = func[i] or 0
    end
 
    header["nn"] = M.nn.init(header["arr_layers"])
@@ -162,6 +163,11 @@ function M.nn.forward(header)
    for i = 1, #func do
       M.mat.dot(nn["a" .. i], nn["a" .. i-1], nn["w" .. i])
       M.mat.sum(nn["a" .. i], nn["b" .. i])
+      if M[func[i]] == nil then
+         print("Error: Activation function does not exist")
+         os.exit(1)
+      end
+
       if func[i] == 0 then
          -- skip
       else
