@@ -1,8 +1,9 @@
 local M = {}
 
 -- Matrix
+M.mat = {}
 
-function M.mat_init(x, y)
+function M.mat.init(x, y)
    local mat = {}
    for i = 1, x do
       mat[i] = {}
@@ -13,7 +14,7 @@ function M.mat_init(x, y)
    return mat
 end
 
-function M.mat_fill(mat, num)
+function M.mat.fill(mat, num)
    for i = 1, #mat do
       for j = 1, #mat[1] do
          mat[i][j] = num
@@ -21,7 +22,7 @@ function M.mat_fill(mat, num)
    end
 end
 
-function M.mat_print(mat)
+function M.mat.print(mat)
    for i = 1, #mat do
       for j = 1, #mat[1] do
          io.write("   ")
@@ -31,7 +32,7 @@ function M.mat_print(mat)
    end
 end
 
-function M.mat_randomf(mat, low, high)
+function M.mat.randomf(mat, low, high)
    for i = 1, #mat do
       for j = 1, #mat[1] do
          mat[i][j] = math.random() * (high - low) + low
@@ -39,7 +40,7 @@ function M.mat_randomf(mat, low, high)
    end
 end
 
-function M.mat_sum(dst, mat)
+function M.mat.sum(dst, mat)
    assert(#dst == #mat, "Rows of destination matrix and source matrix are not equal")
    assert(#dst[1] == #mat[1], "Columns of destination matrix and source matrix are not equal")
 
@@ -50,7 +51,7 @@ function M.mat_sum(dst, mat)
    end
 end
 
-function M.mat_dot(dst, mat1, mat2)
+function M.mat.dot(dst, mat1, mat2)
    assert(#mat1[1] == #mat2, "Rows of first matrix and columns of second matrix are not equal")
    assert(#dst == #mat1, "Rows of destination matrix and first matrix are not equal")
    assert(#dst[1] == #mat2[1], "Columns of destination matrix and second matrix are not equal")
@@ -71,11 +72,11 @@ end
 
 -- Macro for mat_print
 -- variable matrix has to be a string because Lua
-function M.PRINT(nn, matrix)
+function M.mat.PRINT(nn, mat)
    for k, v in pairs(nn) do
-      if k == matrix then
+      if k == mat then
          io.write(k .. ": \n")
-         M.mat_print(v)
+         M.mat.print(v)
          break
       end
    end
@@ -104,20 +105,22 @@ end
 
 
 -- Neural Network
+M.nn = {}
 
-function M.init(layers)
+function M.nn.init(layers)
    local nn = {}
 
-   nn["a0"] = M.mat_init(1, layers[1])
+   nn["a0"] = M.mat.init(1, layers[1])
    for i = 1, #layers-1 do
-      nn["w" .. i] = M.mat_init(layers[i], layers[i+1])
-      nn["b" .. i] = M.mat_init(1, layers[i+1])
-      nn["a" .. i] = M.mat_init(1, layers[i+1])
+      nn["w" .. i] = M.mat.init(layers[i], layers[i+1])
+      nn["b" .. i] = M.mat.init(1, layers[i+1])
+      nn["a" .. i] = M.mat.init(1, layers[i+1])
    end
 
    return nn
 end
 
+-- Subject to change
 function M.header_create(layers)
    local header = {}
 
@@ -128,28 +131,45 @@ function M.header_create(layers)
       header["arr_func"][i] = 0
    end
 
-   header["nn"] = M.init(header["arr_layers"])
+   header["nn"] = M.nn.init(header["arr_layers"])
 
    return header
 end
 
-function M.print(nn)
+function M.nn.print(nn)
    for k, v in pairs(nn) do
       print(k .. ": ")
-      M.mat_print(v)
+      M.mat.print(v)
    end
 end
 
-function M.randomf(nn, low, high)
+function M.nn.randomf(nn, low, high)
    for k, _ in pairs(nn) do
-      M.mat_randomf(nn[k], low, high)
+      M.mat.randomf(nn[k], low, high)
    end
 end
 
-function M.fill(nn, x)
+function M.nn.fill(nn, x)
    for k, _ in pairs(nn) do
-      M.mat_fill(nn[k], x)
+      M.mat.fill(nn[k], x)
    end
+end
+
+function M.forward(header)
+   local func = header["arr_func"]
+   local nn = header["nn"]
+
+   for i = 1, #func do
+      nua.mat_dot(nn["a" .. i], nn["a" .. i-1], nn["w" .. i])
+      nua.mat_sum(nn["a" .. i], nn["b" .. i])
+      if func[i] == 0 then
+         -- skip
+      else
+         nua[func[i]](nn["a" .. i])
+      end
+   end
+
+   return nn["a" .. #func][1][1]
 end
 
 return M
