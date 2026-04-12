@@ -123,6 +123,9 @@ end
 -- Subject to change
 function M.nn.INIT(layers, func)
    func = func or {}
+   if #func >= #layers then
+      error("Error: Too much activation functions", 2)
+   end
    local header = {}
 
    header["arr_layers"] = layers
@@ -166,8 +169,7 @@ function M.nn.forward(header)
       if func[i] == 0 then
          -- skip
       elseif M[func[i]] == nil then
-         print("Error: Activation function does not exist")
-         os.exit(1)
+         error("Error: Activation function does not exist", 2)
       else
          M[func[i]](nn["a" .. i])
       end
