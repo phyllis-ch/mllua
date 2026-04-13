@@ -18,7 +18,7 @@ local M = {}
 
 
 
--- Matrix
+-- 1. Matrix
 M.mat = {}
 
 function M.mat.init(x, y)
@@ -86,7 +86,7 @@ end
 
 
 
--- Matrix Macros
+-- 2. Matrix Macros
 
 -- Macro for mat_print
 -- variable matrix has to be a string because Lua
@@ -102,7 +102,7 @@ end
 
 
 
--- Activation Functions
+-- 3. Activation Functions
 
 function M.sigmoid(mat)
    for i = 1, #mat do
@@ -122,7 +122,7 @@ end
 
 
 
--- Neural Network
+-- 4. Neural Network
 M.nn = {}
 
 function M.nn.init(layers)
@@ -197,16 +197,16 @@ end
 
 
 
--- Training
+-- 5. Training
 
-function M.mse_cost(header, td, stride)
+function M.mse_cost(header, train_dataset, stride)
    local output_count = #M.nn.forward(header)[1]
    local nn = header["nn"]
    local result = 0.0
 
-   for i = 1, #td do
+   for i = 1, #train_dataset do
       for j = 1, stride do
-         nn["a0"][1][j] = td[i][j]
+         nn["a0"][1][j] = train_dataset[i][j]
       end
 
       local y = {}
@@ -214,11 +214,31 @@ function M.mse_cost(header, td, stride)
 
       for j = 1, output_count do
          y[j] = M.nn.forward(header)[1][j]
-         d[j] = y[j] - td[i][stride+j]
+         d[j] = y[j] - train_dataset[i][stride+j]
          result = result + d[j]*d[j]
       end
    end
-   return result / output_count / #td
+   return result / output_count / #train_dataset
+end
+
+function M.finite_diff(header, eps, td, stride)
+   local c = M.mse_cost(header, td, stride)
+   local nn = header["nn"]
+   local Gradients = M.nn.init(header["arr_layers"])
+
+   for k, v in pairs(nn) do
+      for i = 1, #v do
+         for j = 1, #v[1] do
+            local temp = v[i][j]
+
+            v[i][j] = v[i][j] + eps
+            Gradients[k][i][j] = (M.mse_cost(header, td, stride) - c) / eps
+            v[i][j] = temp
+         end
+      end
+   end
+
+   return Gradients
 end
 
 return M
