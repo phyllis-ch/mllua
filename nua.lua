@@ -8,6 +8,16 @@
 
 local M = {}
 
+-- Sections
+--
+-- 1. Matrix
+-- 2. Matrix Macros
+-- 3. Activation Functions
+-- 4. Neural Network
+-- 5. Training
+
+
+
 -- Matrix
 M.mat = {}
 
@@ -76,7 +86,7 @@ end
 
 
 
--- Macros
+-- Matrix Macros
 
 -- Macro for mat_print
 -- variable matrix has to be a string because Lua
@@ -128,8 +138,7 @@ function M.nn.init(layers)
    return nn
 end
 
--- Subject to change
-function M.nn.INIT(layers, func)
+function M.nn.new(layers, func)
    func = func or {}
    if #func >= #layers then
       error("Error: Too much activation functions", 2)
@@ -185,6 +194,10 @@ function M.nn.forward(header)
 
    return nn["a" .. #func]
 end
+
+
+
+-- Training
 
 function M.mse_cost(header, td, stride)
    local output_count = #M.nn.forward(header)[1]
