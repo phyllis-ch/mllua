@@ -1,41 +1,5 @@
 local nua = require("nua")
 
--- Modify as needed
-local function cost(header, ti, to)
-   local nn = header["nn"]
-   local result = 0.0
-
-   for i = 1, #ti do
-      nn["a0"][1][1] = ti[i][1]
-      nn["a0"][1][2] = ti[i][2]
-
-      local y = nua.nn.forward(header)
-      local d = y - to[i][1]
-      result = result + d*d
-   end
-   return result / #ti
-end
-
-local function finite_diff(header, eps, ti, to)
-   local c = cost(header, ti, to)
-   local nn = header["nn"]
-   local Grad = nua.nn.init(header["arr_layers"])
-
-   for k, v in pairs(nn) do
-      for i = 1, #v do
-         for j = 1, #v[1] do
-            local temp = v[i][j]
-
-            v[i][j] = v[i][j] + eps
-            Grad[k][i][j] = (cost(header, ti, to) - c) / eps
-            v[i][j] = temp
-         end
-      end
-   end
-
-   return Grad
-end
-
 -- Apply diffs
 local function learn(header, Grad, rate)
    local nn = header["nn"]
@@ -49,12 +13,20 @@ local function learn(header, Grad, rate)
    end
 end
 
-local function train(header, eps, rate, epoch, step, ti, to)
+local function train(opts)
+   local header = opts.header
+   local eps = opts.eps
+   local rate = opts.rate
+   local epoch = opts.epoch
+   local step = opts.step
+   local td = opts.td
+   local stride = opts.stride
+
    for i = 1, epoch do
-      local Grad = finite_diff(header, eps, ti, to)
+      local Grad = nua.finite_diff(header, eps, td, stride)
       learn(header, Grad, rate)
       if i % step == 0 then
-         print("cost = " .. cost(header, ti, to))
+         print("cost = " .. nua.mse_cost(header, td, stride))
       end
    end
 end
@@ -62,6 +34,13 @@ end
 
 
 -- Main
+local training_data = {
+   {0, 0, 0},
+   {0, 1, 1},
+   {1, 0, 1},
+   {1, 1, 0}
+}
+
 
 local training_input = {
    {0, 0},
@@ -91,7 +70,7 @@ local training_output = {
 
 -- Amount of activation functions should always be one less than length of array of layers
 -- As in #func = #layers-1
-local header = nua.header_create({2, 2, 1}, {"sigmoid", "relu"})
+local header = nua.nn.new({2, 2, 1}, {"sigmoid", "relu"})
 -- To make it less crowded, a variable that points to the neural network can be created
 local Xor = header["nn"]
 nua.nn.randomf(Xor, 0, 1)
@@ -99,11 +78,15 @@ nua.nn.randomf(Xor, 0, 1)
 -- TODO: A function to interact with the array will probably be better
 -- header["arr_func"] = { "sigmoid", "relu" }
 
-local eps = 1e-3     -- epsilon (small number)
-local rate = 1e-1    -- learning rate
-local epoch = 5000   -- amount of training
-local step = 500     -- amount of steps before printing out cost
-train(header, eps, rate, epoch, step, training_input, training_output)
+train({
+   header = header,
+   eps = 1e-3,        -- epsilon (small number)
+   rate = 1e-1,              -- learning rate
+   epoch = 5000,             -- amount of training
+   step = 500,              -- amount of steps before printing out cost
+   td = training_data,
+   stride = 2
+})
 
 -- Print result
 print("---------------------------------")
@@ -112,6 +95,6 @@ for i = 0, 1 do
    for j = 0, 1 do
       Xor["a0"][1][1] = i
       Xor["a0"][1][2] = j
-      print(string.format("%d ^ %d = %f", i, j, nua.nn.forward(header)))
+      print(string.format("%d ^ %d = %f", i, j, nua.nn.forward(header)[1][1]))
    end
 end
