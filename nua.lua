@@ -222,22 +222,19 @@ function M.mse_cost(header, train_dataset, stride)
          nn["a0"][1][j] = train_dataset[i][j]
       end
 
-      local y = {}
-      local d = {}
-
       for j = 1, output_count do
-         y[j] = M.nn.forward(header)[1][j]
-         d[j] = y[j] - train_dataset[i][stride+j]
-         result = result + d[j]*d[j]
+         local y = M.nn.forward(header)[1][j]
+         local d = y - train_dataset[i][stride+j]
+         result = result + d*d
       end
    end
-   return result / output_count / #train_dataset
+   return result/ #train_dataset
 end
 
 function M.finite_diff(header, eps, train_dataset, stride)
    local c = M.mse_cost(header, train_dataset, stride)
    local nn = header["nn"]
-   local Gradients = M.nn.init(header["arr_layers"])
+   local Diffs = M.nn.init(header["arr_layers"])
 
    for k, v in pairs(nn) do
       for i = 1, #v do
@@ -245,13 +242,43 @@ function M.finite_diff(header, eps, train_dataset, stride)
             local temp = v[i][j]
 
             v[i][j] = v[i][j] + eps
-            Gradients[k][i][j] = (M.mse_cost(header, train_dataset, stride) - c) / eps
+            Diffs[k][i][j] = (M.mse_cost(header, train_dataset, stride) - c) / eps
             v[i][j] = temp
          end
       end
    end
 
-   return Gradients
+   return Diffs
+end
+
+function M.apply_diff(header, Diffs, rate)
+   local nn = header["nn"]
+
+   for k, v in pairs(nn) do
+      for i = 1, #v do
+         for j = 1, #v[1] do
+            v[i][j] = v[i][j] - (rate * Diffs[k][i][j])
+         end
+      end
+   end
+end
+
+function M.train(opts)
+   local header = opts.header
+   local eps = opts.eps
+   local rate = opts.rate
+   local epoch = opts.epoch
+   local step = opts.step
+   local td = opts.td
+   local stride = opts.stride
+
+   for i = 1, epoch do
+      local Diffs = M.finite_diff(header, eps, td, stride)
+      M.apply_diff(header, Diffs, rate)
+      if i % step == 0 then
+         print("cost = " .. M.mse_cost(header, td, stride))
+      end
+   end
 end
 
 return M
